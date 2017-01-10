@@ -1,9 +1,9 @@
 #using sqlite3
 import sqlite3
 #import our classes
-import Conversation
-import Message
-import Person
+from conversation import Conversation
+from message import Message
+from person import Person
 
 import datetime
 from os.path import expanduser
@@ -30,29 +30,31 @@ def main():
 
 	c.execute("SELECT * FROM chat");
 	conversations = []
+	groupidlist = []
 	for row in c:
 		group_name = row[13]
 		group_id = row[0]
-	
-	group_name_edited = group_name.encode('ascii','ignore')
-	conversations.append(Conversation(group_name_edited,[],[],group_id))
+		group_name_edited = group_name.encode('ascii','ignore')
+		conversations.append(Conversation(group_name_edited,[],[],group_id))
+		groupidlist.append(group_id)
 
 	#load all messages with each chat
 	lastMessage = ""
 	message_id_list = []
-	for i in group_id:
-		sql_statement = "SELECT * FROM chat_message_join WHERE chat_id='%s'" % (i)
+	for i in groupidlist:
+		sql_statement = "SELECT * FROM chat_message_join WHERE chat_id='%s'" % (groupidlist[i])
 		c.execute(sql_statement)
 		for row in c:
 			message_id = row[1]
 			groupid = row[0]
 			sql = "SELECT * FROM message WHERE ROWID='%s'" % (message_id)
 			c.execute(sql)
-			messageinfo = c
-			date = c[15]
+			for line in c:
+				messageinfo = line
+			date = messageinfo[15]
 			lastMessage = messageinfo[2]
 			for j in range(0,len(conversations)):
-				if (conversations[j].group_id == groupid):
+				if (conversations[j].id == groupid):
 					handleid = messageinfo[6]
 					sql_handle = "SELECT * FROM handle WHERE ROWID='%s'" (handleid)
 					c.execute(sql_handle)
@@ -79,7 +81,7 @@ def main():
 					c.execute(sqlhandle)
 					m = Message(row[2], Person('Unknown',c[1]), gid, row[15])
 					for k in range(0,len(conversations)):
-						if (conversations[k].group_id == m.group_id):
+						if (conversations[k].id == m.group_id):
 							conversations[k].members.append(Person('Unknown', c[1]))
 							conversations[k].messages.prepend(m)
 					sendMessage(m)
@@ -115,4 +117,8 @@ def sendMessage(Message):
 
 	msg = "Sender: %s, Date: %s, Group: %s, Message: %s" (Message.person.number,Message.date,c,Message.text)
 	server.sendmail(email, "19784605861@mymetropcs.com", msg)
+
+
+if __name__ == '__main__':
+	main()
 	server.quit()

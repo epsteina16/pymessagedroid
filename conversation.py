@@ -1,4 +1,4 @@
-class Group:
+class Conversation:
 	def __init__(self,title,members,messages,id):
 		self.title = title
 		self.members = members
