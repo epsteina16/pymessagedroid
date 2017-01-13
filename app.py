@@ -10,6 +10,7 @@ from os.path import expanduser
 
 import time
 import smtplib
+import getpass
 
 #connect to database, read in info
 #when first opened, load past 10 messages in each group/conversation
@@ -25,9 +26,11 @@ def sqliteConnect():
 	return sqlite3.connect(path)
 
 def main():
+	info = login()
+
 	connection = sqliteConnect()
 	c = connection.cursor()
-
+	print("Reading in messages")
 	c.execute("SELECT * FROM chat");
 	conversations = []
 	groupidlist = []
@@ -65,9 +68,11 @@ def main():
 						conversations[j].members.append(Person('Unkown',number)) #add people
 						conversations[j].messages.append(Message(lastMessage, Person('Unkown', number), groupid,date, message_id)) #add messages
 	connection.close()
-
+	print("done reading in messages")
 	while True:
-		if checkForNew(lastMessage):
+		print("checking for new messages")
+		if checkForNew(lastMessage) == True:
+			print("found new message")
 			connection = sqliteConnect()
 			c = connection.cursor()
 			c.execute("SELECT * FROM message")
@@ -84,10 +89,11 @@ def main():
 							if (conversations[k].id == m.group_id):
 								conversations[k].members.append(Person('Unknown', r[1]))
 								conversations[k].messages.append(m)
-						sendMessage(m)
+						sendMessage(m, info[0], info[1])
 	connection.close()
 
 def checkForNew(lastMessage):
+	print("in check for new")
 	time.sleep(60)
 	connection = sqliteConnect()
 	c = connection.cursor()
@@ -101,10 +107,8 @@ def checkForNew(lastMessage):
 	else:
 		return True
 
-def sendMessage(Message):
-	email = raw_input('Email:')
-	password = raw_input('Password:')
-
+def sendMessage(Message, email, password):
+	print("sending new message")
 	server = smtplib.SMTP('smtp.gmail.com', 587)
 	server.starttls()
 	server.login(email, password)
@@ -119,6 +123,24 @@ def sendMessage(Message):
 	msg = "Sender: %s, Date: %s, Group: %s, Message: %s" % (Message.person.number,Message.date,c,Message.text)
 	server.sendmail(email, "19784605861@mymetropcs.com", msg)
 	server.quit()
+
+def login():
+	print("Welcome to pymessagedroid. Please enter a gmail account and password below.")
+	email = raw_input('Email:')
+	password = getpass.getpass()
+	loggedin = False
+	while loggedin == False:
+		try:
+			server = smtplib.SMTP('smtp.gmail.com', 587)
+			server.starttls()
+			server.login(email, password)
+			loggedin = True
+		except e:
+			loggedin = False
+	server.quit()	
+	print("succesful")
+	info = [email,password]
+	return info
 
 if __name__ == '__main__':
 	main()
