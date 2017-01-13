@@ -42,7 +42,7 @@ def main():
 	lastMessage = ""
 	message_id_list = []
 	for i in groupidlist:
-		sql_statement = "SELECT * FROM chat_message_join WHERE chat_id='%s'" % (groupidlist[i])
+		sql_statement = "SELECT * FROM chat_message_join WHERE chat_id='%s'" % (i)
 		c.execute(sql_statement)
 		for row in c:
 			message_id = row[1]
@@ -50,42 +50,42 @@ def main():
 			sql = "SELECT * FROM message WHERE ROWID='%s'" % (message_id)
 			c.execute(sql)
 			for line in c:
-				messageinfo = line
-			date = messageinfo[15]
-			lastMessage = messageinfo[2]
-			for j in range(0,len(conversations)):
-				if (conversations[j].id == groupid):
-					handleid = messageinfo[6]
-					sql_handle = "SELECT * FROM handle WHERE ROWID='%s'" (handleid)
-					c.execute(sql_handle)
-					handle = c
-					number = handle[1]
-					#to add: import contacts
-					#need to remove duplicate members
-					conversations[j].members.append(Person('Unkown',number)) #add people
-					conversations[j].messages.prepend(Message(messageinfo[2], Person('Unkown', number), groupid,date)) #add messages
+				date = line[15]
+				lastMessage = line[2]
+				handleid = line[6]
+				for j in range(0,len(conversations)):
+					if (conversations[j].id == groupid):
+						sql_handle = "SELECT * FROM handle WHERE ROWID='%s'" % (handleid)
+						c.execute(sql_handle)
+						number = 0
+						for thing in c:
+							number = handle[1]
+						#to add: import contacts
+						#need to remove duplicate members
+						conversations[j].members.append(Person('Unkown',number)) #add people
+						conversations[j].messages.append(Message(lastMessage, Person('Unkown', number), groupid,date, message_id)) #add messages
 	connection.close()
 
 	while True:
-		if checkForNew():
+		if checkForNew(lastMessage):
 			connection = sqliteConnect()
 			c = connection.cursor()
 			c.execute("SELECT * FROM message")
 			for row in c:
 				while row[2] != lastMessage:
-					m = Message()
-					sqlnew = "SELECT chat_id FROM chat_message_join WHERE message_id = %s" (row[0])
+					sqlnew = "SELECT chat_id FROM chat_message_join WHERE message_id = %s" % (row[0])
 					c.execute(sqlnew)
 					gid = c
-					sqlhandle = "SELECT * FROM handle WHERE ROWID='%s'" (row[6])
+					sqlhandle = "SELECT * FROM handle WHERE ROWID='%s'" % (row[6])
 					c.execute(sqlhandle)
-					m = Message(row[2], Person('Unknown',c[1]), gid, row[15])
-					for k in range(0,len(conversations)):
-						if (conversations[k].id == m.group_id):
-							conversations[k].members.append(Person('Unknown', c[1]))
-							conversations[k].messages.prepend(m)
-					sendMessage(m)
-
+					for r in c:
+						m = Message(row[2], Person('Unknown',r[1]), gid, row[15], row[0])
+						for k in range(0,len(conversations)):
+							if (conversations[k].id == m.group_id):
+								conversations[k].members.append(Person('Unknown', r[1]))
+								conversations[k].messages.append(m)
+						sendMessage(m)
+	connection.close()
 
 def checkForNew(lastMessage):
 	time.sleep(60)
@@ -94,7 +94,8 @@ def checkForNew(lastMessage):
 	messages = []
 	c.execute("SELECT text FROM message")
 	for row in c:
-		messages.prepend(row)
+		messages.append(row)
+	connection.close()
 	if messages[0] == lastMessage:
 		return False
 	else:
@@ -111,14 +112,13 @@ def sendMessage(Message):
 	connection = sqliteConnect()
 	c = connection.cursor()
 
-	sql = "SELECT display_name FROM chat WHERE ROWID = '%s'" (Message.groupid)
+	sql = "SELECT display_name FROM chat WHERE ROWID = '%s'" % (Message.groupid)
 	c.execute(sql);
 	connection.close()
 
-	msg = "Sender: %s, Date: %s, Group: %s, Message: %s" (Message.person.number,Message.date,c,Message.text)
+	msg = "Sender: %s, Date: %s, Group: %s, Message: %s" % (Message.person.number,Message.date,c,Message.text)
 	server.sendmail(email, "19784605861@mymetropcs.com", msg)
-
+	server.quit()
 
 if __name__ == '__main__':
 	main()
-	server.quit()
