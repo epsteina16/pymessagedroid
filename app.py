@@ -85,6 +85,7 @@ def main():
 					c.execute(sqlhandle)
 					for r in c:
 						m = Message(row[2], Person('Unknown',r[1]), gid, row[15], row[0])
+						lastMessage = row[2]
 						for k in range(0,len(conversations)):
 							if (conversations[k].id == m.group_id):
 								conversations[k].members.append(Person('Unknown', r[1]))
@@ -135,7 +136,8 @@ def login():
 			server.starttls()
 			server.login(email, password)
 			loggedin = True
-		except e:
+		#change the exception
+		except SMTPException:
 			loggedin = False
 	server.quit()	
 	print("succesful")
