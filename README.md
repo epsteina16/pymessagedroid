@@ -1,3 +1,6 @@
+# Aaron Epstein
+# Copyright 2017
+
 # pymessagedroid
 A python desktop app for Macs to send imessages to Android phone
 
@@ -5,17 +8,32 @@ A python desktop app for Macs to send imessages to Android phone
 This app accesses your macs iMessages via the chat.db sqlite3 database in the route ~/Library/Messages.
 
 # Guide to database
-All messages are stored in message table. Each message contains valuable information like text, date, handle_id.
-Handle_id tells you the rowid in the handle table of the 'handle'. Each handle contains the number of the person who sent the message.
-The rowid of the message can be used to find out information about the group it belongs to. Use the rowid to find the chat_id in the chat_message_join table, which relates the chats (groups) to the messages.
-Using the chat_id as the rowid in the chat table you can get the group name and information. The group name is labeled as the display name in the chat table.
+Messages table
+	-holds all messages
+	-each message contains valuable info like 'text', 'date', 'handle_id'
 
-# Structure of the app
-Loads in all messages. Stores messages in 'conversations' which contain people and messages. Each message contains info about the message like the text, date, groupid, and sender. Each person object contains name and number. Then checks for new messages every minute and sends these to mobile number via email. Need to change mobile number for personal use. 
+Handle Table (holds numbers that send messages to you)
+	- each handle contains its id and the corresponding number
+
+chat_message_join table
+	-contains 'chat_id' and 'message_id'
+	-gives relation between each message and chat (i.e. what group is each message in)
+
+chat table
+	-contains each group message
+	-group name is stored under 'display_name'
+
+Other references - https://github.com/mjbrisebois/pymessage
+
+# How it works
+Logs into your gmail account and stores the address to send messages to.
+Loads in most recent message from the database. Checks at a certain interval for new messages.
+When a new message is recieved an email is sent from your email to the given address that contains
+the message, its group, the number its from and the date.
 
 # How to use
-Change mobile number/email address to go with it based off of phone service. Run app.py on local computer. Input email and password.
+Use command 'python app.py'
 
-# Other
-Still under development. All people are currently 'Unknown' names. Considering use google api to import contacts.
+# Phone Carrier Domains
+http://www.emailtextmessages.com/
 

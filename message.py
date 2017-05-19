@@ -1,7 +1,6 @@
 class Message:
-	def __init__(self,text,person,groupid,date,id):
+	def __init__(self,text,number,groupName,date):
 		self.text = text
-		self.person = person;
-		self.groupid = groupid;
+		self.number = number
+		self.groupName = groupName;
 		self.date = date;
-		self.id = id;
