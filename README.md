@@ -1,5 +1,5 @@
 # Aaron Epstein
-# Copyright 2017
+Copyright 2017
 
 # pymessagedroid
 A python desktop app for Macs to send imessages to Android phone
